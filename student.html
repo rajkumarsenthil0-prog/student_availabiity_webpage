@@ -1,0 +1,1767 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Student Availability Planner</title>
+
+    <style>
+        :root {
+            --bg: #fff;
+            --card: #f3f3f3;
+            --text: #111;
+            --muted: #666;
+            --accent: #ffc30b;
+            --ok: #2e7d32;
+            --bad: #c62828;
+            --line: #ddd;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #111;
+                --card: #222;
+                --text: #f5f5f5;
+                --muted: #aaa;
+                --line: #333;
+                --ok: #6fcf74;
+                --bad: #ff7b7b;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #111;
+            --card: #222;
+            --text: #f5f5f5;
+            --muted: #aaa;
+            --line: #333;
+            --ok: #6fcf74;
+            --bad: #ff7b7b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-padding-top: env(safe-area-inset-top, 0px);
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        header {
+            background: var(--accent);
+            color: #111;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        header .t {
+            flex: 1;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-family: Cambria, Georgia, serif;
+        }
+
+        header p {
+            margin: 2px 0 0;
+            font-size: 13px;
+        }
+
+        header button {
+            background: #111;
+            color: #fff;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 16px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .hide {
+            display: none !important;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            font-size: 17px;
+            font-family: Cambria, Georgia, serif;
+        }
+
+        .form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+            gap: 10px;
+            align-items: end;
+        }
+
+        label {
+            display: grid;
+            gap: 4px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        select, input {
+            padding: 9px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 15px;
+            width: 100%;
+        }
+
+        input[readonly] {
+            opacity: .7;
+        }
+
+        button {
+            padding: 9px 14px;
+            border-radius: 8px;
+            border: 0;
+            background: var(--accent);
+            color: #111;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button.ghost {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-weight: 400;
+        }
+
+        button:disabled {
+            opacity: .45;
+            cursor: default;
+        }
+
+        .login {
+            max-width: 440px;
+            margin: 24px auto;
+        }
+
+        .roles {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .role {
+            padding: 16px 10px;
+            border-radius: 12px;
+            border: 2px solid var(--line);
+            background: var(--bg);
+            color: var(--text);
+            font-weight: 700;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .role small {
+            display: block;
+            font-weight: 400;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .role.on {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #111;
+        }
+
+        .role.on small {
+            color: #111;
+        }
+
+        .stack {
+            display: grid;
+            gap: 10px;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: var(--muted);
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .err {
+            color: var(--bad);
+            font-size: 13px;
+            min-height: 18px;
+        }
+
+        .link {
+            background: none;
+            border: 0;
+            color: var(--text);
+            text-decoration: underline;
+            font-weight: 400;
+            padding: 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .stat {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat b {
+            display: block;
+            font-size: 24px;
+            font-family: Cambria, Georgia, serif;
+        }
+
+        .stat span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 16px;
+        }
+
+        @media(max-width:760px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .row:last-child {
+            border-bottom: 0;
+        }
+
+        .grow {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .name {
+            font-weight: 700;
+        }
+
+        .sub {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .score {
+            font-weight: 700;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        .bar {
+            height: 12px;
+            background: var(--bg);
+            border-radius: 99px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+        }
+
+        .bar i {
+            display: block;
+            height: 100%;
+            background: var(--accent);
+            width: 0;
+            transition: width .4s;
+        }
+
+        .list {
+            max-height: 380px;
+            overflow: auto;
+        }
+
+        .dist {
+            display: grid;
+            grid-template-columns: 110px 1fr 40px;
+            gap: 6px;
+            align-items: center;
+            font-size: 13px;
+            margin: 4px 0;
+        }
+
+        .dist .bar {
+            height: 10px;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chip {
+            font-size: 12px;
+            padding: 3px 9px;
+            border-radius: 99px;
+            background: var(--bg);
+            border: 1px solid var(--line);
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 99px;
+            background: var(--accent);
+            color: #111;
+        }
+
+        .badge.ok {
+            background: var(--ok);
+            color: #fff;
+        }
+
+        .badge.bad {
+            background: var(--bad);
+            color: #fff;
+        }
+
+        .badge.gray {
+            background: var(--line);
+            color: var(--text);
+        }
+
+        .note {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--line);
+        }
+
+        .note.new {
+            border-left-color: var(--accent);
+        }
+
+        .banner {
+            background: var(--accent);
+            color: #111;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 700;
+        }
+
+        .mh {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .cal {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            max-width: 520px;
+        }
+
+        .cal .dn {
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .d {
+            height: 44px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: var(--bg);
+            color: var(--text);
+            font-weight: 400;
+            padding: 2px;
+            font-size: 14px;
+            line-height: 1.1;
+        }
+
+        .d small {
+            display: block;
+            font-size: 9px;
+        }
+
+        .d.on {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #111;
+            font-weight: 700;
+        }
+
+        .d:disabled {
+            opacity: .3;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="t">
+        <h1>Student Availability Planner</h1>
+        <p class="hide" id="hsub"></p>
+    </div>
+
+    <span class="badge hide" id="bell"></span>
+    <button class="hide" id="logout">Log out</button>
+</header>
+
+<main>
+
+    <!-- LOGIN SECTION -->
+    <section class="card login" id="vLogin">
+
+        <h2>Log in</h2>
+
+        <div class="roles">
+            <button class="role on" data-r="student">
+                Student
+                <small>view &amp; edit my free time</small>
+            </button>
+
+            <button class="role" data-r="coordinator">
+                Coordinator
+                <small>view &amp; assign volunteers</small>
+            </button>
+        </div>
+
+        <div class="stack">
+
+            <div class="stack hide" id="signup">
+
+                <label>
+                    Full name
+                    <input autocomplete="name" id="lname">
+                </label>
+
+                <div class="form">
+
+                    <label>
+                        Program
+                        <select id="lprog">
+                            <option value="ENG">Engineering (4 yrs)</option>
+                            <option value="AS">Arts &amp; Science (3 yrs)</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Year
+                        <select id="lyr"></select>
+                    </label>
+
+                </div>
+            </div>
+
+            <label>
+                Email ID
+                <input autocomplete="username" id="lemail"
+                    placeholder="you@college.edu" type="email">
+            </label>
+
+            <label>
+                Password
+                <input autocomplete="current-password" id="lpass"
+                    type="password">
+            </label>
+
+            <div class="err" id="lerr"></div>
+
+            <button id="lgo">Log in as Student</button>
+
+            <button class="link" id="ltoggle">
+                New student? Create an account
+            </button>
+
+            <div class="hint" id="lhint"></div>
+
+        </div>
+    </section>
+
+    <!-- STUDENT SECTION -->
+    <section class="hide" id="vStudent" style="display:contents">
+
+        <div class="banner hide" id="nbanner"></div>
+
+        <div class="card">
+            <h2>Notifications</h2>
+            <div id="notes"></div>
+        </div>
+
+        <div class="card">
+
+            <h2>My profile</h2>
+
+            <div class="form">
+
+                <label>
+                    Email ID
+                    <input id="semail" readonly>
+                </label>
+
+                <label>
+                    Name
+                    <input id="sname">
+                </label>
+
+                <label>
+                    Program
+                    <select id="sprog">
+                        <option value="ENG">Engineering (4 yrs)</option>
+                        <option value="AS">Arts &amp; Science (3 yrs)</option>
+                    </select>
+                </label>
+
+                <label>
+                    Year
+                    <select id="syr"></select>
+                </label>
+
+                <label>
+                    Exam this month?
+                    <select id="sexam">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </label>
+
+            </div>
+        </div>
+
+        <div class="card">
+
+            <h2>My free dates</h2>
+
+            <div class="form" style="max-width:420px;margin-bottom:10px">
+
+                <label>
+                    Free from
+                    <select id="tf"></select>
+                </label>
+
+                <label>
+                    Free to
+                    <select id="tt"></select>
+                </label>
+
+            </div>
+
+            <p class="sub" style="margin:0 0 8px">
+                Pick the time window, then tap the dates you are free.
+                Yellow = free. Tap again to remove.
+            </p>
+
+            <div class="mh">
+
+                <button class="ghost sm" id="prev">&lsaquo;</button>
+
+                <b id="mtitle"></b>
+
+                <button class="ghost sm" id="next">&rsaquo;</button>
+
+            </div>
+
+            <div class="cal" id="cal"></div>
+
+            <div class="chips" id="sel2" style="margin-top:10px"></div>
+
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
+
+                <button id="ssave">Save changes</button>
+
+                <button class="ghost" id="sclear">Clear all dates</button>
+
+                <span class="sub" id="sinfo"></span>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- COORDINATOR SECTION -->
+    <section class="hide" id="vCoord" style="display:contents">
+
+        <div class="card">
+
+            <h2>Campus data</h2>
+
+            <div class="stats" id="campus"></div>
+
+        </div>
+
+        <div class="card">
+
+            <h2>Event</h2>
+
+            <div class="form">
+
+                <label>
+                    Event name
+                    <input id="ename" value="Orientation Workshop">
+                </label>
+
+                <label>
+                    Date
+                    <input id="edate" type="date">
+                </label>
+
+                <label>
+                    Start
+                    <select id="st"></select>
+                </label>
+
+                <label>
+                    End
+                    <select id="en"></select>
+                </label>
+
+                <label>
+                    Volunteers needed
+                    <input id="need" max="200" min="1" type="number" value="5">
+                </label>
+
+                <label>
+                    Program
+                    <select id="prog">
+                        <option value="All">All programs</option>
+                        <option value="ENG">Engineering (4 yrs)</option>
+                        <option value="AS">Arts &amp; Science (3 yrs)</option>
+                    </select>
+                </label>
+
+                <label>
+                    Year
+                    <select id="yr">
+                        <option value="0">All years</option>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                    </select>
+                </label>
+
+                <button id="go">Find available students</button>
+
+            </div>
+        </div>
+
+        <div class="card">
+
+            <h2>Matching result</h2>
+
+            <div class="stats" id="rs"></div>
+
+        </div>
+
+        <div class="grid">
+
+            <div class="card">
+
+                <h2>Available students</h2>
+
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+
+                    <button id="assignTop">Assign top suggested</button>
+
+                    <span class="sub" id="prog2">
+                        Run a search to see available students.
+                    </span>
+
+                </div>
+
+                <div class="list" id="sel"></div>
+
+            </div>
+
+            <div class="card">
+
+                <h2>Assigned volunteers</h2>
+
+                <div class="bar">
+                    <i id="bar"></i>
+                </div>
+
+                <p class="sub" id="prog3"></p>
+
+                <div id="asg"></div>
+
+                <h2 style="margin-top:14px">
+                    Eligible by program and year
+                </h2>
+
+                <div id="dist"></div>
+
+                <h2 style="margin-top:14px">
+                    Registered students (view only)
+                </h2>
+
+                <div class="chips" id="regs"></div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const H0 = 8, H1 = 18;
+
+const MN = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+];
+
+const PROGS = {
+    ENG: {name:"Engineering",years:4,secs:8,n:3200},
+    AS: {name:"Arts & Science",years:3,secs:6,n:1800}
+};
+
+const rangeMask = (a,b) => {
+    let m = 0;
+    for(let h=a;h<b;h++) m |= 1 << (h-H0);
+    return m;
+};
+
+const ymd = d =>
+    d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+
+const parse = s => new Date(s+"T00:00:00");
+
+const dshow = s => {
+    const d=parse(s);
+    return WD[d.getDay()]+" "+d.getDate()+" "+MN[d.getMonth()].slice(0,3);
+};
+
+const today = new Date();
+today.setHours(0,0,0,0);
+
+// Generate sample campus data
+let seed=2026;
+
+const rnd = () => {
+    seed |= 0;
+    seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed>>>15,1|seed);
+    t = t + Math.imul(t ^ t>>>7,61|t) ^ t;
+    return ((t ^ t>>>14)>>>0)/4294967296;
+};
+
+const FN = [
+    "Aarav","Divya","Karthik","Meena","Surya",
+    "Priya","Naveen","Lakshmi","Vimal","Harini",
+    "Ravi","Nisha","Arun","Kavya","Gokul",
+    "Sneha","Bala","Janani","Dinesh","Revathi"
+];
+
+const base=[];
+let secCount=0;
+
+for(const [pk,P] of Object.entries(PROGS)) {
+
+    const per=Math.round(P.n/(P.secs*P.years));
+
+    for(let y=1;y<=P.years;y++) {
+
+        for(let si=0;si<P.secs;si++) {
+
+            const sn=String.fromCharCode(65+si);
+            const exam=rnd()<0.15;
+            const busy={};
+
+            WD.forEach(d=>{
+                let m=0;
+
+                if(d==="Sat") {
+                    if(rnd()<0.35) m=rangeMask(9,13);
+                }
+                else if(d!=="Sun") {
+                    for(let h=9;h<16;h++)
+                        if(rnd()<0.72) m |= 1<<(h-H0);
+                }
+
+                busy[d]=m;
+            });
+
+            const sec={pk,year:y,sec:sn,busy,exam};
+            secCount++;
+
+            for(let i=0;i<per && base.length<5000;i++) {
+
+                const p={};
+
+                if(rnd()<0.12) {
+                    const dd=WD[1+Math.floor(rnd()*6)];
+                    const s=H0+Math.floor(rnd()*8);
+                    p[dd]=rangeMask(s,s+3);
+                }
+
+                base.push({
+                    id:"g"+base.length,
+                    n:FN[Math.floor(rnd()*FN.length)],
+                    sec,
+                    rel:.55+rnd()*.45,
+                    load:Math.floor(rnd()*6),
+                    p
+                });
+            }
+        }
+    }
+}
+
+// Browser storage
+let MEM=[];
+const KEY="sap3_accts";
+
+const load=()=>{
+    try {
+        const v=JSON.parse(localStorage.getItem(KEY)||"null");
+        if(v) return v;
+    } catch(e) {}
+
+    return MEM;
+};
+
+const save=a=>{
+    MEM=a;
+    try {
+        localStorage.setItem(KEY,JSON.stringify(a));
+    } catch(e) {}
+};
+
+async function H(s) {
+    try {
+        const b=await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode("sap:"+s)
+        );
+
+        return [...new Uint8Array(b)]
+            .map(x=>x.toString(16).padStart(2,"0"))
+            .join("");
+
+    } catch(e) {
+        return "p:"+s;
+    }
+}
+
+let me=null;
+let role="student";
+let signup=false;
+let SF={};
+let calY=today.getFullYear();
+let calM=today.getMonth();
+let genAsg=[];
+
+// Seed demo accounts
+async function seedAccts() {
+
+    let a=load();
+
+    if(!a.some(x=>x.role==="coordinator")) {
+
+        const f={};
+
+        for(let i=0;i<60;i++) {
+            const d=new Date(today);
+            d.setDate(d.getDate()+i);
+
+            if(d.getDay()===6)
+                f[ymd(d)]=[9,16];
+        }
+
+        a.unshift(
+            {
+                role:"coordinator",
+                email:"coordinator@maatram.demo",
+                hash:await H("coord123"),
+                name:"Maatram Coordinator"
+            },
+            {
+                role:"student",
+                email:"student@maatram.demo",
+                hash:await H("student123"),
+                name:"Demo Student",
+                prog:"ENG",
+                yr:2,
+                exam:0,
+                free:f,
+                notes:[]
+            }
+        );
+
+        save(a);
+    }
+}
+
+// Login
+const fillYears=(sel,pk)=>{
+    sel.innerHTML=Array.from(
+        {length:PROGS[pk].years},
+        (_,i)=>"<option>"+(i+1)+"</option>"
+    ).join("");
+};
+
+function loginUI() {
+
+    document.querySelectorAll(".role").forEach(b=>
+        b.classList.toggle("on",b.dataset.r===role)
+    );
+
+    $("ltoggle").classList.toggle("hide",role!=="student");
+
+    $("signup").classList.toggle(
+        "hide",
+        !(role==="student"&&signup)
+    );
+
+    $("lgo").textContent=
+        role==="student"&&signup
+        ?"Create student account"
+        :"Log in as "+(role==="student"?"Student":"Coordinator");
+
+    $("ltoggle").textContent=signup
+        ?"Already have an account? Log in"
+        :"New student? Create an account";
+
+    $("lhint").innerHTML=
+        "<b>Demo account</b><br>"+
+        (role==="student"
+        ?"student@maatram.demo / student123"
+        :"coordinator@maatram.demo / coord123")+
+        "<br>Demo only: accounts live in this browser. A real system needs a secure server.";
+
+    $("lerr").textContent="";
+}
+
+document.querySelectorAll(".role").forEach(b=>{
+    b.onclick=()=>{
+        role=b.dataset.r;
+        signup=false;
+        loginUI();
+    };
+});
+
+$("ltoggle").onclick=()=>{
+    signup=!signup;
+    loginUI();
+};
+
+fillYears($("lyr"),"ENG");
+
+$("lprog").onchange=()=>{
+    fillYears($("lyr"),$("lprog").value);
+};
+
+$("lgo").onclick=async()=>{
+
+    const email=$("lemail").value.trim().toLowerCase();
+    const pass=$("lpass").value;
+
+    if(!email||!pass) {
+        $("lerr").textContent="Enter your email ID and password.";
+        return;
+    }
+
+    let a=load();
+
+    if(role==="student"&&signup) {
+
+        const name=$("lname").value.trim();
+
+        if(!name) {
+            $("lerr").textContent="Enter your name.";
+            return;
+        }
+
+        if(pass.length<6) {
+            $("lerr").textContent="Password must be at least 6 characters.";
+            return;
+        }
+
+        if(a.some(x=>x.email===email)) {
+            $("lerr").textContent="This email is already registered.";
+            return;
+        }
+
+        a.push({
+            role:"student",
+            email,
+            hash:await H(pass),
+            name,
+            prog:$("lprog").value,
+            yr:+$("lyr").value,
+            exam:0,
+            free:{},
+            notes:[]
+        });
+
+        save(a);
+    }
+
+    const acc=load().find(
+        x=>x.email===email&&x.role===role
+    );
+
+    if(!acc||acc.hash!==await H(pass)) {
+        $("lerr").textContent=
+            "Wrong email ID or password for a "+role+" account.";
+        return;
+    }
+
+    me=acc;
+    $("lpass").value="";
+    enter();
+};
+
+$("logout").onclick=()=>{
+
+    me=null;
+
+    ["vStudent","vCoord","hsub","bell","logout"].forEach(i=>
+        $(i).classList.add("hide")
+    );
+
+    $("vLogin").classList.remove("hide");
+
+    signup=false;
+    loginUI();
+};
+
+function enter() {
+
+    $("vLogin").classList.add("hide");
+    $("logout").classList.remove("hide");
+    $("hsub").classList.remove("hide");
+
+    $("hsub").textContent=
+        (me.role==="student"?"Student: ":"Coordinator: ")+
+        me.name+" · "+me.email;
+
+    if(me.role==="student") {
+        $("vStudent").classList.remove("hide");
+        studentInit();
+    }
+    else {
+        $("vCoord").classList.remove("hide");
+        coordInit();
+    }
+}
+
+// Student page
+for(let h=H0;h<=H1;h++) {
+
+    const o=h+":00";
+
+    $("tf").add(new Option(o,h));
+    $("tt").add(new Option(o,h));
+}
+
+$("tf").value=9;
+$("tt").value=17;
+
+function studentInit() {
+
+    $("semail").value=me.email;
+    $("sname").value=me.name;
+    $("sprog").value=me.prog;
+
+    fillYears($("syr"),me.prog);
+
+    $("syr").value=me.yr;
+    $("sexam").value=String(me.exam);
+
+    SF=Object.assign({},me.free);
+
+    cal();
+    info();
+    notes(true);
+}
+
+$("sprog").onchange=()=>{
+    fillYears($("syr"),$("sprog").value);
+};
+
+function info(t) {
+    $("sinfo").textContent=
+        t||(Object.keys(SF).length+" free date(s) selected");
+}
+
+// Calendar
+function cal() {
+
+    $("mtitle").textContent=MN[calM]+" "+calY;
+
+    let h=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+        .map(d=>"<div class='dn'>"+d+"</div>")
+        .join("");
+
+    const first=new Date(calY,calM,1);
+    const off=(first.getDay()+6)%7;
+    const n=new Date(calY,calM+1,0).getDate();
+
+    for(let i=0;i<off;i++)
+        h+="<div></div>";
+
+    for(let d=1;d<=n;d++) {
+
+        const dt=new Date(calY,calM,d);
+        const k=ymd(dt);
+        const f=SF[k];
+
+        h+="<button class='d"+(f?" on":"")+"' data-k='"+k+"'"+
+            (dt<today?" disabled":"")+">"+
+            d+
+            (f?"<small>"+f[0]+"–"+f[1]+"</small>":"")+
+            "</button>";
+    }
+
+    $("cal").innerHTML=h;
+
+    $("sel2").innerHTML=Object.keys(SF).sort().map(k=>
+        "<span class='chip'>"+
+        dshow(k)+" · "+SF[k][0]+":00–"+SF[k][1]+":00 "+
+        "<a href='#' data-x='"+k+"' style='color:inherit'>✕</a>"+
+        "</span>"
+    ).join("");
+}
+
+$("cal").onclick=e=>{
+
+    const b=e.target.closest(".d");
+
+    if(!b) return;
+
+    const k=b.dataset.k;
+
+    if(SF[k]) {
+        delete SF[k];
+    }
+    else {
+
+        const a=+$("tf").value;
+        const z=+$("tt").value;
+
+        if(z<=a) {
+            alert("Free to must be after Free from.");
+            return;
+        }
+
+        SF[k]=[a,z];
+    }
+
+    cal();
+    info();
+};
+
+$("sel2").onclick=e=>{
+
+    const x=e.target.dataset.x;
+
+    if(!x) return;
+
+    e.preventDefault();
+
+    delete SF[x];
+
+    cal();
+    info();
+};
+
+$("prev").onclick=()=>{
+    calM--;
+
+    if(calM<0) {
+        calM=11;
+        calY--;
+    }
+
+    cal();
+};
+
+$("next").onclick=()=>{
+    calM++;
+
+    if(calM>11) {
+        calM=0;
+        calY++;
+    }
+
+    cal();
+};
+
+$("sclear").onclick=()=>{
+    SF={};
+    cal();
+    info();
+};
+
+// Save student details
+$("ssave").onclick=()=>{
+
+    const a=load();
+    const i=a.findIndex(x=>x.email===me.email);
+
+    a[i]=Object.assign(a[i],{
+        name:$("sname").value.trim()||me.name,
+        prog:$("sprog").value,
+        yr:+$("syr").value,
+        exam:+$("sexam").value,
+        free:Object.assign({},SF)
+    });
+
+    save(a);
+
+    me=a[i];
+
+    $("hsub").textContent=
+        "Student: "+me.name+" · "+me.email;
+
+    info("Saved. The coordinator will see your dates when they search.");
+};
+
+// Notifications
+function notes(first) {
+
+    const a=load();
+    const acc=a.find(x=>x.email===me.email);
+
+    me=acc;
+
+    const ns=(acc.notes||[]).slice().reverse();
+    const fresh=ns.filter(n=>!n.read);
+
+    $("notes").innerHTML=ns.map(n=>
+        "<div class='note"+(!n.read?" new":"")+"'>"+
+        "<div><b>"+
+        (!n.read?"<span class='badge'>NEW</span> ":"")+
+        "You were selected as a volunteer</b></div>"+
+        "<div>“"+n.event+"” · "+dshow(n.date)+" · "+
+        n.a+":00–"+n.b+":00</div>"+
+        "<div style='margin-top:6px;display:flex;gap:6px;align-items:center'>"+
+        (n.status==="pending"
+        ?"<button data-a='accepted' data-id='"+n.id+"'>Accept</button>"+
+         "<button class='ghost' data-a='declined' data-id='"+n.id+"'>Decline</button>"
+        :"<span class='badge "+
+        (n.status==="accepted"?"ok":"bad")+"'>"+
+        n.status.toUpperCase()+"</span>")+
+        "</div></div>"
+    ).join("")||
+    "<p class='sub'>No notifications yet. You will be notified here when a coordinator selects you for an event.</p>";
+
+    const pend=ns.filter(n=>n.status==="pending").length;
+
+    $("bell").textContent="🔔 "+pend;
+    $("bell").classList.toggle("hide",!pend);
+
+    if(fresh.length) {
+
+        $("nbanner").classList.remove("hide");
+
+        $("nbanner").textContent=
+            "🔔 You have "+fresh.length+
+            " new notification"+(fresh.length>1?"s":"")+
+            ": you were selected as a volunteer!";
+
+        acc.notes.forEach(n=>n.read=true);
+
+        save(a);
+    }
+    else if(!first) {
+        $("nbanner").classList.add("hide");
+    }
+}
+
+$("notes").onclick=e=>{
+
+    const b=e.target.closest("button");
+
+    if(!b) return;
+
+    const a=load();
+    const acc=a.find(x=>x.email===me.email);
+
+    const n=acc.notes.find(x=>x.id===b.dataset.id);
+
+    if(!n) return;
+
+    n.status=b.dataset.a;
+
+    save(a);
+
+    notes();
+};
+
+// Coordinator page
+function coordInit() {
+
+    if(!$("st").options.length) {
+
+        for(let h=H0;h<=H1;h++) {
+
+            const o=h+":00";
+
+            $("st").add(new Option(o,h));
+            $("en").add(new Option(o,h));
+        }
+
+        $("st").value=10;
+        $("en").value=13;
+
+        const d=new Date(today);
+
+        d.setDate(d.getDate()+((6-d.getDay()+7)%7||7));
+
+        $("edate").value=ymd(d);
+    }
+
+    match();
+}
+
+const clash=(acc,date,a,b)=>
+    (acc.notes||[]).some(n=>
+        n.date===date&&n.status!=="declined"&&n.a<b&&a<n.b
+    );
+
+function regStudents() {
+
+    return load()
+        .filter(x=>x.role==="student")
+        .map(x=>({
+            id:"acc:"+x.email,
+            email:x.email,
+            n:x.name,
+            sec:{
+                pk:x.prog,
+                year:x.yr,
+                sec:"S",
+                busy:{},
+                exam:!!x.exam
+            },
+            rel:.8,
+            load:Math.min(5,(x.notes||[]).filter(n=>
+                n.status==="accepted"
+            ).length),
+            p:{},
+            free:x.free,
+            acc:x
+        }));
+}
+
+const evKey=()=>
+    $("ename").value+"|"+
+    $("edate").value+"|"+
+    $("st").value+"|"+
+    $("en").value;
+
+let state=null;
+
+// Find available students
+function match() {
+
+    const t0=performance.now();
+
+    const regs=regStudents();
+    const students=base.concat(regs);
+
+    const date=$("edate").value;
+    const a=+$("st").value;
+    const b=+$("en").value;
+    const pf=$("prog").value;
+    const yf=+$("yr").value;
+
+    if(!date) {
+        alert("Pick the event date.");
+        return;
+    }
+
+    if(b<=a) {
+        alert("End time must be after start time.");
+        return;
+    }
+
+    const wd=WD[parse(date).getDay()];
+    const win=rangeMask(a,b);
+
+    let scoped=0;
+    let exam=0;
+    let busy=0;
+
+    const ok=[];
+
+    for(const s of students) {
+
+        const sec=s.sec;
+
+        if(pf!=="All"&&sec.pk!==pf) continue;
+        if(yf&&sec.year!==yf) continue;
+
+        scoped++;
+
+        if(sec.exam) {
+            exam++;
+            continue;
+        }
+
+        if(s.free) {
+
+            const f=s.free[date];
+
+            if(!f||f[0]>a||f[1]<b||clash(s.acc,date,a,b)) {
+                busy++;
+                continue;
+            }
+        }
+        else {
+
+            if((sec.busy[wd]||0)&win||
+               (s.p[wd]||0)&win) {
+                busy++;
+                continue;
+            }
+        }
+
+        const isFinal=sec.year===PROGS[sec.pk].years;
+
+        ok.push({
+            s,
+            sec,
+            isFinal,
+            sc:Math.round(
+                50+30*(1-s.load/5)+20*s.rel-(isFinal?8:0)
+            )
+        });
+    }
+
+    ok.sort((x,y)=>y.sc-x.sc);
+
+    const ms=Math.max(
+        1,
+        Math.round(performance.now()-t0)
+    );
+
+    state={ok};
+
+    $("rs").innerHTML=[
+        [scoped,"in scope"],
+        [ok.length,"available"],
+        [exam,"exam"],
+        [busy,"busy / clash"],
+        [ms+" ms","matching time"]
+    ].map(x=>
+        "<div class='stat'><b>"+x[0]+"</b><span>"+x[1]+"</span></div>"
+    ).join("");
+
+    const dist={};
+
+    ok.forEach(o=>{
+        const k=PROGS[o.sec.pk].name.split(" ")[0]+
+            " · Yr "+o.sec.year;
+
+        dist[k]=(dist[k]||0)+1;
+    });
+
+    const ks=Object.keys(dist).sort();
+    const mx=Math.max(1,...Object.values(dist));
+
+    $("dist").innerHTML=ks.map(k=>
+        "<div class='dist'>"+
+        "<span>"+k+"</span>"+
+        "<div class='bar'><i style='width:"+
+        dist[k]/mx*100+"%'></i></div>"+
+        "<span>"+dist[k]+"</span>"+
+        "</div>"
+    ).join("")||
+    "<p class='sub'>No eligible students.</p>";
+
+    $("campus").innerHTML=[
+        [base.length+regs.length,"students"],
+        [secCount,"sections"],
+        [regs.length,"registered accounts"],
+        ["4 / 3","years (Eng / A&S)"]
+    ].map(x=>
+        "<div class='stat'><b>"+x[0]+"</b><span>"+x[1]+"</span></div>"
+    ).join("");
+
+    $("regs").innerHTML=regs.map(s=>
+        "<span class='chip'>"+
+        s.n+" · "+PROGS[s.sec.pk].name.split(" ")[0]+
+        " Yr "+s.sec.year+" · "+
+        Object.keys(s.free).length+" free date(s)</span>"
+    ).join("")||
+    "<span class='sub'>None yet.</span>";
+
+    render();
+}
+
+// Assigned volunteers
+function assigned() {
+
+    const k=evKey();
+    const out=[];
+
+    load()
+        .filter(x=>x.role==="student")
+        .forEach(x=>
+            (x.notes||[])
+            .filter(n=>n.key===k)
+            .forEach(n=>
+                out.push({
+                    id:n.id,
+                    n:x.name,
+                    status:n.status,
+                    email:x.email
+                })
+            )
+        );
+
+    genAsg.filter(g=>g.key===k).forEach(g=>
+        out.push({
+            id:g.id,
+            n:g.n,
+            status:"invited",
+            gen:true
+        })
+    );
+
+    return out;
+}
+
+// Display matching and assignments
+function render() {
+
+    if(!state) return;
+
+    const as=assigned();
+    const need=+$("need").value;
+    const k=evKey();
+
+    const taken=s=>as.some(x=>
+        s.email
+        ?x.email===s.email
+        :x.id==="g:"+s.id+":"+k
+    );
+
+    const active=as.filter(x=>x.status!=="declined").length;
+
+    $("bar").style.width=
+        Math.min(100,active/need*100)+"%";
+
+    $("prog3").textContent=
+        active+" of "+need+" volunteers assigned";
+
+    $("asg").innerHTML=as.map(x=>
+        "<div class='row'>"+
+        "<div class='grow'>"+
+        "<div class='name'>"+x.n+"</div>"+
+        "<div class='sub'>"+
+        (x.gen?"No login (sample student)":x.email)+
+        "</div></div>"+
+        "<span class='badge "+
+        (x.status==="accepted"?"ok":
+         x.status==="declined"?"bad":
+         x.status==="invited"?"gray":"")+"'>"+
+        (x.status==="pending"?"NOTIFIED":x.status.toUpperCase())+
+        "</span>"+
+        "<button class='ghost sm' data-rm='"+x.id+"'>Remove</button>"+
+        "</div>"
+    ).join("")||
+    "<p class='sub'>Nobody assigned yet.</p>";
+
+    $("prog2").textContent=
+        state.ok.length+" available · showing best "+
+        Math.min(60,state.ok.length)+
+        " (top "+need+" suggested)";
+
+    $("sel").innerHTML=state.ok.slice(0,60).map((o,i)=>
+        "<div class='row'>"+
+        "<div class='grow'>"+
+        "<div class='name'>"+
+        o.s.n+
+        (i<need?" <span class='badge'>suggested</span>":"")+
+        "</div>"+
+        "<div class='sub'>"+
+        PROGS[o.sec.pk].name+" · Yr "+o.sec.year+o.sec.sec+
+        (o.isFinal?" · final year":"")+
+        (o.s.free?" · registered":"")+
+        "</div></div>"+
+        "<div class='score'>"+o.sc+"</div>"+
+        "<button data-as='"+i+"'"+
+        (taken(o.s)?" disabled>Assigned":">Assign")+
+        "</button></div>"
+    ).join("")||
+    "<p class='sub'>Nobody is available for this window.</p>";
+}
+
+// Assign volunteer
+function assign(o) {
+
+    const k=evKey();
+    const s=o.s;
+
+    if(s.email) {
+
+        const a=load();
+        const acc=a.find(x=>x.email===s.email);
+
+        if((acc.notes||[]).some(n=>
+            n.key===k&&n.status!=="declined"
+        )) return;
+
+        (acc.notes=acc.notes||[]).push({
+
+            id:"n"+Date.now()+
+                Math.random().toString(36).slice(2,6),
+
+            key:k,
+            event:$("ename").value||"Event",
+            date:$("edate").value,
+            a:+$("st").value,
+            b:+$("en").value,
+            status:"pending",
+            read:false
+        });
+
+        save(a);
+    }
+    else if(!genAsg.some(g=>
+        g.key===k&&g.id==="g:"+s.id+":"+k
+    )) {
+
+        genAsg.push({
+            id:"g:"+s.id+":"+k,
+            key:k,
+            n:s.n
+        });
+    }
+}
+
+// Assignment click
+$("sel").onclick=e=>{
+
+    const b=e.target.closest("button[data-as]");
+
+    if(!b||b.disabled) return;
+
+    assign(state.ok[+b.dataset.as]);
+
+    render();
+};
+
+// Assign top suggestions
+$("assignTop").onclick=()=>{
+
+    if(!state) return;
+
+    const need=+$("need").value;
+
+    state.ok.slice(0,need).forEach(assign);
+
+    render();
+};
+
+// Remove assigned volunteer
+$("asg").onclick=e=>{
+
+    const b=e.target.closest("button[data-rm]");
+
+    if(!b) return;
+
+    const id=b.dataset.rm;
+
+    if(id.startsWith("g:")) {
+
+        genAsg=genAsg.filter(g=>g.id!==id);
+
+    }
+    else {
+
+        const a=load();
+
+        a.forEach(x=>
+            x.notes=(x.notes||[]).filter(n=>n.id!==id)
+        );
+
+        save(a);
+    }
+
+    render();
+};
+
+// Search button
+$("go").onclick=match;
+
+// Storage updates across tabs
+window.addEventListener("storage",e=>{
+
+    if(e.key!==KEY||!me) return;
+
+    if(me.role==="student") {
+
+        const a=load().find(x=>x.email===me.email);
+
+        if(a) {
+            me=a;
+            notes(true);
+        }
+    }
+    else {
+        render();
+    }
+});
+
+// Initialize application
+seedAccts().then(loginUI);
+
+</script>
+
+</body>
+</html>
